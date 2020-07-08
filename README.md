@@ -22,6 +22,8 @@ The `config.py` looks like this:
 USERNAME = 'user@email.com'
 PASSWORD = 'password'
 DEFAULT_DOWNLOAD_PATH = 'E:/Downloads/LinkedInLearning' #use "/" as separators
+DESCRIPTIONS = True
+EX_FILES = True
 SUBS = True
 COURSES = [
     'it-security-foundations-core-concepts',
@@ -34,14 +36,26 @@ COURSES = [
 2. Fill the `COURSES` array with the slug of the the courses you want to download and save the config file, for example:
 `https://www.linkedin.com/learning/it-security-foundations-core-concepts/ -> it-security-foundations-core-concepts`
 
+3. Decide if you want descriptions, exercise files, or subtitles
+
 Then execute the script:
 ```
 python lldr.py
 ```
+If you've got multiple versions of python installed, run 
+```
+py -2.7 lldr.py
+```
+
 The courses will be saved in your defined download folder.
 
 ### Demo (outdated by now)
 [![asciicast](https://asciinema.org/a/143894.png)](https://asciinema.org/a/143894)
+
+
+---
+Issues: File checking not working for videos, they will still download even if file exists. 
+---
 
 ---
 TODO: Scheduling Download times
