@@ -10,6 +10,7 @@ Features:
 * Downloading complete courses: course description, videos, exercise files and subtitles.
 * Numbering of chapters, videos and subtitles.
 * Subtitles will have the same name as the video file, so players like MPC-HC will automatically load the subtitles when playing a video file.
+* Shows progress with timestamps
 
 ### How to use
 First install the requirements:
@@ -20,7 +21,7 @@ The `config.py` looks like this:
 ```
 USERNAME = 'user@email.com'
 PASSWORD = 'password'
-BASE_DOWNLOAD_PATH = 'E:/Downloads/LinkedInLearning' #use "/" as separators
+DEFAULT_DOWNLOAD_PATH = 'E:/Downloads/LinkedInLearning' #use "/" as separators
 SUBS = True
 COURSES = [
     'it-security-foundations-core-concepts',
@@ -35,7 +36,7 @@ COURSES = [
 
 Then execute the script:
 ```
-python lld.py
+python lldr.py
 ```
 The courses will be saved in your defined download folder.
 
@@ -43,5 +44,5 @@ The courses will be saved in your defined download folder.
 [![asciicast](https://asciinema.org/a/143894.png)](https://asciinema.org/a/143894)
 
 ---
-###### Have Fun & Feel Free to report any issues
+TODO: Scheduling Download times
 ---
