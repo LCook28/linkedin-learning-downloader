@@ -47,7 +47,7 @@ If you've got multiple versions of python installed, run
 py -2.7 lldr.py
 ```
 
-The courses will be saved in your defined download folder.
+The courses will be saved in your defined download folder, otherwise they will be in the 'out' folder.
 
 ### Demo (outdated by now)
 [![asciicast](https://asciinema.org/a/143894.png)](https://asciinema.org/a/143894)
