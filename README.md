@@ -11,6 +11,7 @@ Features:
 * Numbering of chapters, videos and subtitles.
 * Subtitles will have the same name as the video file, so players like MPC-HC will automatically load the subtitles when playing a video file.
 * Shows progress with timestamps
+* Ability to restrict download hours 
 
 ### How to use
 First install the requirements:
@@ -25,6 +26,9 @@ DEFAULT_DOWNLOAD_PATH = 'E:/Downloads/LinkedInLearning' #use "/" as separators
 DESCRIPTIONS = True
 EX_FILES = True
 SUBS = True
+LIMIT_DOWNLOAD_TIMES = False
+START_TIME = '00:00'
+END_TIME = '23:59' 
 COURSES = [
     'it-security-foundations-core-concepts',
     'javascript-for-web-designers-2'
@@ -54,9 +58,5 @@ The courses will be saved in your defined download folder, otherwise they will b
 
 
 ---
-Issues: File checking not working for videos, they will still download even if file exists. 
----
-
----
-TODO: Scheduling Download times
+Issues: File checking not working for videos, they will still download even if file exists. - File checking does work for exercise files
 ---
