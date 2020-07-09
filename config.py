@@ -3,6 +3,7 @@
 USERNAME = ''
 PASSWORD = ''
 DEFAULT_DOWNLOAD_PATH = '' #use "/" as separators
+TIMESTAMPS = True
 DESC = True
 EX_FILES = True
 SUBS = True
