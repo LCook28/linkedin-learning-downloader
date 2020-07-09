@@ -15,35 +15,26 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 
-
 def login():
     cookie_filename = 'cookies.txt'
-
     cookie_jar = cookielib.MozillaCookieJar(cookie_filename)
-
     opener = urllib2.build_opener(
                 urllib2.HTTPRedirectHandler(),
                 urllib2.HTTPHandler(debuglevel=0),
                 urllib2.HTTPSHandler(debuglevel=0),
                 urllib2.HTTPCookieProcessor(cookie_jar)
             )
-
     html = load_page(opener, 'https://www.linkedin.com/checkpoint/lg/login')
     soup = BeautifulSoup(html, 'html.parser')
-
-
     csrf = soup.find('input',{'name':'csrfToken'}).get('value')
     loginCsrfParam = soup.find('input',{'name':'loginCsrfParam'}).get('value')
-
     login_data = urllib.urlencode({
                     'session_key': config.USERNAME,
                     'session_password': config.PASSWORD,
                     'csrfToken': csrf,
                     'loginCsrfParam': loginCsrfParam
                 })
-
     load_page(opener, 'https://www.linkedin.com/checkpoint/lg/login-submit', login_data)
-
     try:
         cookie = cookie_jar._cookies['.www.linkedin.com']['/']['li_at'].value
         jsessionid = ''
@@ -54,10 +45,8 @@ def login():
     except Exception, e:
         print e
         sys.exit(0)
-
     cookie_jar.save()
     os.remove(cookie_filename)
-
     return cookie, csrf
 
 
@@ -74,7 +63,6 @@ def authenticate():
 
 
 def load_page(opener, url, data=None):
-
     try:
         if data is not None:
             response = opener.open(url, data)
@@ -94,27 +82,27 @@ def format_time(ms):
     return '%d:%02d:%02d,%02d' % (hours, minutes, seconds, milliseconds)
 
 
-def convert_time(clock):
-    return datetime.strptime(clock, '%H:%M').time()
+def timestamp():
+    if config.TIMESTAMPS:
+        print '[%s]' % time.ctime()
 
 
-start_time = convert_time(config.START_TIME)
-end_time = convert_time(config.END_TIME)
-
-def is_time_between(begin_time, end_time):
-    if config.LIMIT_DOWNLOAD_TIMES:
+def is_time_between():
+    if config.LIMIT_DOWNLOAD_TIMES and config.START_TIME and config.END_TIME:
+        start_time = datetime.strptime(config.START_TIME, '%H:%M').time()
+        end_time = datetime.strptime(config.END_TIME, '%H:%M').time()
         check_time = datetime.now().time()
-        if begin_time < end_time:
-            return check_time >= begin_time and check_time <= end_time
-        else: # crosses midnight
-            return check_time >= begin_time or check_time <= end_time
+        if start_time < end_time:
+            return start_time <= check_time <= end_time
+        else:  # crosses midnight
+            return check_time >= start_time or check_time <= end_time
     else:
         return True
 
-def download_file(url, file_path, file_name):
 
+def download_file(url, file_path, file_name):
     reply = requests.get(url, stream=True)
-    if is_time_between(start_time, end_time):
+    if is_time_between():
         if not os.path.exists(file_path):
             os.makedirs(file_path)
         with open(file_path + '/' + file_name, 'wb') as f:
@@ -128,7 +116,7 @@ def download_file(url, file_path, file_name):
 
 
 def download_desc(desc, url, file_path, file_name):
-    if is_time_between(start_time, end_time):
+    if is_time_between():
         if not os.path.exists(file_path):
             os.makedirs(file_path)
         with open(file_path + '/' + file_name, 'wb') as f:
@@ -136,8 +124,9 @@ def download_desc(desc, url, file_path, file_name):
     else:
         print 'Outside of allotted download time, download canceled.'
 
+
 def download_sub(subs, path, file_name):
-    if is_time_between(start_time, end_time):
+    if is_time_between():
         with open(path + '/' + file_name, 'a') as f:
             i = 1
             for sub in subs:
@@ -153,11 +142,6 @@ def download_sub(subs, path, file_name):
                 i += 1
     else:
         print 'Outside of allotted download time, download canceled.'
-
-
-def timestamp():
-    if config.TIMESTAMPS:
-        print '[%s]' % time.ctime()
 
 
 if __name__ == '__main__':
