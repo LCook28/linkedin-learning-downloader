@@ -156,7 +156,8 @@ def download_sub(subs, path, file_name):
 
 
 def timestamp():
-    print '[%s]' % time.ctime()
+    if config.TIMESTAMPS:
+        print '[%s]' % time.ctime()
 
 
 if __name__ == '__main__':
