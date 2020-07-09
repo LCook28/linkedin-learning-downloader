@@ -9,6 +9,7 @@ import re
 from bs4 import BeautifulSoup
 from clint.textui import progress
 import time
+#from datetime import datetime
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -92,6 +93,14 @@ def format_time(ms):
     return '%d:%02d:%02d,%02d' % (hours, minutes, seconds, milliseconds)
 
 
+#def is_time_between(begin_time, end_time, check_time=None):
+#    # If check time is not given, default to current UTC time
+#    check_time = check_time or datetime.now()
+#    if begin_time < end_time:
+#        return check_time >= begin_time and check_time <= end_time
+#    else: # crosses midnight
+#        return check_time >= begin_time or check_time <= end_time
+
 
 def download_file(url, file_path, file_name):
 
@@ -153,6 +162,7 @@ if __name__ == '__main__':
         exercises_list = course_data['exerciseFiles']
         timestamp()
 
+        print '[*] Parsing "%s" course\'s chapters' % course_name
         if config.DESCRIPTIONS:
             print 'Downloading course description'
             download_desc(description, 'https://www.linkedin.com/learning/%s' % course, course_path, 'About - %s.txt' % course_name)
@@ -176,7 +186,6 @@ if __name__ == '__main__':
                     download_file(ex_url, course_path, ex_name)
 
         timestamp()
-        print '[*] Parsing "%s" course\'s chapters' % course_name
         print '[*] [%d chapters found]' % len(chapters)
         for chapter in chapters:
             chapter_name = re.sub(r'[\\/*?:"<>|]', "", chapter['title'])
