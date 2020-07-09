@@ -9,7 +9,6 @@ import re
 from bs4 import BeautifulSoup
 from clint.textui import progress
 import time
-#from datetime import datetime
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -92,14 +91,6 @@ def format_time(ms):
     hours, minutes = divmod(minutes, 60)
     return '%d:%02d:%02d,%02d' % (hours, minutes, seconds, milliseconds)
 
-
-#def is_time_between(begin_time, end_time, check_time=None):
-#    # If check time is not given, default to current UTC time
-#    check_time = check_time or datetime.now()
-#    if begin_time < end_time:
-#        return check_time >= begin_time and check_time <= end_time
-#    else: # crosses midnight
-#        return check_time >= begin_time or check_time <= end_time
 
 
 def download_file(url, file_path, file_name):
