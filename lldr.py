@@ -9,9 +9,11 @@ import re
 from bs4 import BeautifulSoup
 from clint.textui import progress
 import time
+from datetime import datetime
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
+
 
 
 def login():
@@ -92,41 +94,65 @@ def format_time(ms):
     return '%d:%02d:%02d,%02d' % (hours, minutes, seconds, milliseconds)
 
 
+def convert_time(clock):
+    return datetime.strptime(clock, '%H:%M').time()
+
+
+start_time = convert_time(config.START_TIME)
+end_time = convert_time(config.END_TIME)
+
+def is_time_between(begin_time, end_time):
+    if config.LIMIT_DOWNLOAD_TIMES:
+        check_time = datetime.now().time()
+        if begin_time < end_time:
+            return check_time >= begin_time and check_time <= end_time
+        else: # crosses midnight
+            return check_time >= begin_time or check_time <= end_time
+    else:
+        return True
 
 def download_file(url, file_path, file_name):
 
     reply = requests.get(url, stream=True)
-    if not os.path.exists(file_path):
-        os.makedirs(file_path)
-    with open(file_path + '/' + file_name, 'wb') as f:
-        total_length = int(reply.headers.get('content-length'))
-        for chunk in progress.bar(reply.iter_content(chunk_size=1024), expected_size=(total_length/1024) + 1):
-            if chunk:
-                f.write(chunk)
-                f.flush()
+    if is_time_between(start_time, end_time):
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+        with open(file_path + '/' + file_name, 'wb') as f:
+            total_length = int(reply.headers.get('content-length'))
+            for chunk in progress.bar(reply.iter_content(chunk_size=1024), expected_size=(total_length/1024) + 1):
+                if chunk:
+                    f.write(chunk)
+                    f.flush()
+    else:
+        print 'Outside of allotted download time, download canceled.'
 
 
 def download_desc(desc, url, file_path, file_name):
-    if not os.path.exists(file_path):
-        os.makedirs(file_path)
-    with open(file_path + '/' + file_name, 'wb') as f:
-        f.write('%s\n\n%s' % (desc, url))
-
+    if is_time_between(start_time, end_time):
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+        with open(file_path + '/' + file_name, 'wb') as f:
+            f.write('%s\n\n%s' % (desc, url))
+    else:
+        print 'Outside of allotted download time, download canceled.'
 
 def download_sub(subs, path, file_name):
-    with open(path + '/' + file_name, 'a') as f:
-        i = 1
-        for sub in subs:
-            t_start = sub['transcriptStartAt']
-            if i == len(subs):
-                t_end = t_start + 5000
-            else:
-                t_end = subs[i]['transcriptStartAt']
-            caption = sub['caption']
-            f.write('%s\n' % str(i))
-            f.write('%s --> %s\n' % (format_time(t_start), format_time(t_end)))
-            f.write('%s\n\n' % caption)
-            i += 1
+    if is_time_between(start_time, end_time):
+        with open(path + '/' + file_name, 'a') as f:
+            i = 1
+            for sub in subs:
+                t_start = sub['transcriptStartAt']
+                if i == len(subs):
+                    t_end = t_start + 5000
+                else:
+                    t_end = subs[i]['transcriptStartAt']
+                caption = sub['caption']
+                f.write('%s\n' % str(i))
+                f.write('%s --> %s\n' % (format_time(t_start), format_time(t_end)))
+                f.write('%s\n\n' % caption)
+                i += 1
+    else:
+        print 'Outside of allotted download time, download canceled.'
 
 
 def timestamp():
@@ -138,6 +164,7 @@ if __name__ == '__main__':
     headers = {'Csrf-Token':cookies['JSESSIONID']}
 
     for course in config.COURSES:
+
         print ''
         course_url = 'https://www.linkedin.com/learning-api/detailedCourses' \
                      '??fields=videos&addParagraphsToTranscript=true&courseSlug={0}&q=slugs'.format(course)
