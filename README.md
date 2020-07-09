@@ -23,6 +23,7 @@ The `config.py` looks like this:
 USERNAME = 'user@email.com'
 PASSWORD = 'password'
 DEFAULT_DOWNLOAD_PATH = 'E:/Downloads/LinkedInLearning' #use "/" as separators
+TIMESTAMPS = True
 DESCRIPTIONS = True
 EX_FILES = True
 SUBS = True
