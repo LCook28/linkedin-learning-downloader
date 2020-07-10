@@ -56,8 +56,3 @@ The courses will be saved in your defined download folder, otherwise they will b
 
 ### Demo (outdated by now)
 [![asciicast](https://asciinema.org/a/143894.png)](https://asciinema.org/a/143894)
-
-
----
-Issues: File checking not working for videos, they will still download even if file exists. - File checking does work for exercise files
----
