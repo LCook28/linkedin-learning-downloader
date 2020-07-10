@@ -19,29 +19,24 @@ def login():
     cookie_filename = 'cookies.txt'
     cookie_jar = cookielib.MozillaCookieJar(cookie_filename)
     opener = urllib2.build_opener(
-                urllib2.HTTPRedirectHandler(),
-                urllib2.HTTPHandler(debuglevel=0),
-                urllib2.HTTPSHandler(debuglevel=0),
-                urllib2.HTTPCookieProcessor(cookie_jar)
-            )
+        urllib2.HTTPRedirectHandler(),
+        urllib2.HTTPHandler(debuglevel=0),
+        urllib2.HTTPSHandler(debuglevel=0),
+        urllib2.HTTPCookieProcessor(cookie_jar)
+    )
     html = load_page(opener, 'https://www.linkedin.com/checkpoint/lg/login')
     soup = BeautifulSoup(html, 'html.parser')
-    csrf = soup.find('input',{'name':'csrfToken'}).get('value')
-    loginCsrfParam = soup.find('input',{'name':'loginCsrfParam'}).get('value')
+    csrf = soup.find('input', {'name': 'csrfToken'}).get('value')
+    loginCsrfParam = soup.find('input', {'name': 'loginCsrfParam'}).get('value')
     login_data = urllib.urlencode({
-                    'session_key': config.USERNAME,
-                    'session_password': config.PASSWORD,
-                    'csrfToken': csrf,
-                    'loginCsrfParam': loginCsrfParam
-                })
+        'session_key': config.USERNAME,
+        'session_password': config.PASSWORD,
+        'csrfToken': csrf,
+        'loginCsrfParam': loginCsrfParam
+    })
     load_page(opener, 'https://www.linkedin.com/checkpoint/lg/login-submit', login_data)
     try:
         cookie = cookie_jar._cookies['.www.linkedin.com']['/']['li_at'].value
-        jsessionid = ''
-        for ck in cookie_jar:
-            # print cookie.name, cookie.value, cookie.domain
-            if ck.name == 'JSESSIONID':
-                jsessionid = ck.value
     except Exception, e:
         print e
         sys.exit(0)
@@ -58,7 +53,7 @@ def authenticate():
         print '[*] Obtained new session: %s' % session
         cookies = dict(li_at=session, JSESSIONID=jsessionid)
     except Exception, e:
-        sys.exit('[!] Could not authenticate to linkedin. %s' % e)
+        sys.exit('[!] Could not authenticate to LinkedIn. %s' % e)
     return cookies
 
 
@@ -107,7 +102,7 @@ def download_file(url, file_path, file_name):
             os.makedirs(file_path)
         with open(file_path + '/' + file_name, 'wb') as f:
             total_length = int(reply.headers.get('content-length'))
-            for chunk in progress.bar(reply.iter_content(chunk_size=1024), expected_size=(total_length/1024) + 1):
+            for chunk in progress.bar(reply.iter_content(chunk_size=1024), expected_size=(total_length / 1024) + 1):
                 if chunk:
                     f.write(chunk)
                     f.flush()
@@ -125,9 +120,9 @@ def download_desc(desc, url, file_path, file_name):
         print 'Outside of allotted download time, download canceled.'
 
 
-def download_sub(subs, path, file_name):
+def download_sub(subs, file_path, file_name):
     if is_time_between():
-        with open(path + '/' + file_name, 'a') as f:
+        with open(file_path + '/' + file_name, 'a') as f:
             i = 1
             for sub in subs:
                 t_start = sub['transcriptStartAt']
@@ -146,7 +141,7 @@ def download_sub(subs, path, file_name):
 
 if __name__ == '__main__':
     cookies = authenticate()
-    headers = {'Csrf-Token':cookies['JSESSIONID']}
+    headers = {'Csrf-Token': cookies['JSESSIONID']}
 
     for course in config.COURSES:
 
@@ -168,7 +163,8 @@ if __name__ == '__main__':
         print '[*] Parsing "%s" course\'s chapters' % course_name
         if config.DESCRIPTIONS:
             print 'Downloading course description'
-            download_desc(description, 'https://www.linkedin.com/learning/%s' % course, course_path, 'About - %s.txt' % course_name)
+            download_desc(description, 'https://www.linkedin.com/learning/%s' % course, course_path,
+                          'About - %s.txt' % course_name)
 
         if config.EX_FILES:
             for exercise in exercises_list:
@@ -191,9 +187,10 @@ if __name__ == '__main__':
         timestamp()
         print '[*] [%d chapters found]' % len(chapters)
         for chapter in chapters:
-            chapter_name = re.sub(r'[\\/*?:"<>|]', "", chapter['title'])
+            chapter_name = re.sub(r'[\\/*?:"<>|]', "", chapter['title']).encode("utf-8", errors='ignore')
             videos = chapter['videos']
             vc = 0
+            chapter_path = '%s/%s' % (course_path, chapter_name)
 
             timestamp()
             print '[*] --- Parsing "%s" chapters\'s videos' % chapter_name
@@ -204,33 +201,53 @@ if __name__ == '__main__':
                 video_url = 'https://www.linkedin.com/learning-api/detailedCourses' \
                             '?addParagraphsToTranscript=false&courseSlug={0}&q=slugs&resolution=_720&videoSlug={1}' \
                     .format(course, video_slug)
-                chapter_path = '%s/%s' % (course_path, chapter_name)
-                video_path = chapter_path + '/' + '%s. %s.mp4' % (str(vc), video_name)
                 r = requests.get(video_url, cookies=cookies, headers=headers)
                 vc += 1
+                video_file = '%s. %s.mp4' % (str(vc), video_name)
+                sub_file = '%s. %s.srt' % (str(vc), video_name)
+                video_path = chapter_path + '/' + video_file
+                sub_path = chapter_path + '/' + sub_file
                 video_data = r.json()['elements'][0]
+
                 if os.path.exists(video_path):
                     timestamp()
                     print '[!] ------ Skipping the video "%s", because it already exists' % video_name
-                    vc += 1
+                    if config.SUBS:
+                        if os.path.exists(sub_path):
+                            timestamp()
+                            print '[!] ------ Skipping the subtitles "%s", because it already exists' % video_name
+                        else:
+                            try:
+                                subs = video_data['selectedVideo']['transcript']['lines']
+                            except KeyError:
+                                timestamp()
+                                print 'No subtitles available'
+                            else:
+                                timestamp()
+                                print 'Downloading subtitles'
+                                download_sub(subs, chapter_path, sub_file)
                     continue
                 try:
                     download_url = re.search('"progressiveUrl":"(.+)","expiresAt"', r.text).group(1)
                 except Exception, e:
                     timestamp()
-                    print '[!] ------ Can\'t download the video "%s".' % video_name
+                    print '[!] ------ Can\'t download the video "%s"' % video_name
                     print e
                 else:
                     timestamp()
                     print '[*] ------ Downloading video "%s"' % video_name
-                    download_file(download_url, chapter_path, '%s. %s.mp4' % (str(vc), video_name))
+                    download_file(download_url, chapter_path, video_file)
                     if config.SUBS:
-                        try:
-                            subs = video_data['selectedVideo']['transcript']['lines']
-                        except KeyError:
+                        if os.path.exists(sub_path):
                             timestamp()
-                            print 'No subtitles available'
+                            print '[!] ------ Skipping the subtitles "%s", because it already exists' % video_name
                         else:
-                            timestamp()
-                            print 'Downloading subtitles'
-                            download_sub(subs, chapter_path, '%s. %s.srt' % (str(vc), video_name))
+                            try:
+                                subs = video_data['selectedVideo']['transcript']['lines']
+                            except KeyError:
+                                timestamp()
+                                print 'No subtitles available'
+                            else:
+                                timestamp()
+                                print 'Downloading subtitles'
+                                download_sub(subs, chapter_path, sub_file)
